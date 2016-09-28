@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/yokse.iml" filepath="$PROJECT_DIR$/yokse.iml" />
+      <module fileurl="file://$PROJECT_DIR$/multi-agents.iml" filepath="$PROJECT_DIR$/multi-agents.iml" />
     </modules>
   </component>
 </project>
