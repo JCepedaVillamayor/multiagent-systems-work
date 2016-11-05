@@ -22,10 +22,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
+        <module name="multi-agents" />
         <module name="yokse" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="multi-agents" target="1.5" />
       <module name="yokse" target="1.5" />
     </bytecodeTargetLevel>
   </component>
