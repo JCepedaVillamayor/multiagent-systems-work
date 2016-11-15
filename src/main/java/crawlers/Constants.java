@@ -1,7 +1,7 @@
 package crawlers;
 
 /**
- * Created by neverhope on 06/10/16.
+ * Created by jcepeda on 06/10/16.
  */
 public class Constants {
     public static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) " +
