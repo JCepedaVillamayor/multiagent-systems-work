@@ -13,17 +13,16 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 public class BibliotecaUCLMSpider extends Agent {
-    private LinkedList<String> links;
+    protected LinkedList<String> links;
     private String query;
     ThreadedBehaviourFactory tbf;
-    //TODO: No results error control
 
     /**
      * Setup the agent
      */
     public void setup() {
         this.links = new LinkedList<String>();
-        query = "hola";
+        query = "risto";
         tbf = new ThreadedBehaviourFactory();
         addBehaviour(new SearchBehaviour(this));
     }
@@ -47,7 +46,10 @@ public class BibliotecaUCLMSpider extends Agent {
         }
 
         /**
-         * Obtain the main page and search the books
+         * Search the given query.
+         *
+         * First, extracts all the links through the
+         * function
          *
          * @param query This is the query to search
          * @return true if the search is successful or false if not
@@ -57,8 +59,12 @@ public class BibliotecaUCLMSpider extends Agent {
 
             try {
                 resultPage = getResultPage(query);
-                getBooks(resultPage);
             } catch (CannotSearchException e) {
+                return false;
+            }
+            try {
+                getBooks(resultPage);
+            } catch (NotFoundException e){
                 return false;
             }
 
@@ -66,7 +72,9 @@ public class BibliotecaUCLMSpider extends Agent {
         }
 
         /**
-         * Search in bibliotecauclm the the query and obtain the result page, going through a redirect page
+         * Navigate throug the main page of UCLM library, then
+         * obtain the result url and obtain the page where the results of the queries
+         * are stored
          *
          * @param query the query to search
          * @return The Result page
@@ -76,7 +84,7 @@ public class BibliotecaUCLMSpider extends Agent {
             Document nextWeb, mainWeb, resultWeb;
             mainWeb = getWeb();
             nextWeb = fillFormAndObtainPage(mainWeb, query);
-            String endPoint = getRedirectEndpoint(nextWeb);
+            String endPoint = getRedirectQuery(nextWeb);
 
             try {
                 resultWeb = Jsoup.connect(Constants.BIBLIO_CATALOG + endPoint)
@@ -96,7 +104,7 @@ public class BibliotecaUCLMSpider extends Agent {
          * @param baseWeb the web with the attribute Refresh
          * @return The result url
          */
-        private String getRedirectEndpoint(Document baseWeb) {
+        private String getRedirectQuery(Document baseWeb) {
             Element refreshElement = baseWeb.getElementsByAttributeValue("http-equiv", "Refresh").first();
             String rawEndpoint = refreshElement.attr("content");
             String endPoint = rawEndpoint.split("URL=")[1];
@@ -156,8 +164,15 @@ public class BibliotecaUCLMSpider extends Agent {
          *
          * @param resultPage The web where the book links are available
          */
-        private void getBooks(Document resultPage) {
+        private void getBooks(Document resultPage) throws NotFoundException{
             LinkedList<String> linked = new LinkedList();
+            Elements noResult = resultPage.getElementsByClass("nores");
+            if (noResult.size() > 1){
+                for(Element res:noResult){
+                    System.out.printf(res.data());
+                }
+                throw new NotFoundException();
+            }
             String baseUri = resultPage.baseUri().split("ACC")[0].replace("?", "");
             Elements books = resultPage.getElementsByClass("coverlist");
 
@@ -168,39 +183,9 @@ public class BibliotecaUCLMSpider extends Agent {
             }
 
             for (String link : linked) {
-                addBehaviour(tbf.wrap(new PageBehaviour(link)));
+                addBehaviour(tbf.wrap(new PageBehaviour(link, getAgent())));
             }
         }
     }
 
-    private class PageBehaviour extends OneShotBehaviour {
-        private String link;
-
-        /**
-         * Constructor of the class
-         *
-         * @param link the book link to obtain the information
-         */
-        public PageBehaviour(String link) {
-            this.link = link;
-        }
-
-        /**
-         * Inherited from the Behaviour class, this action obtains the book
-         * and adds the information to the Agent
-         */
-        public void action() {
-            Document doc;
-            try {
-                doc = Jsoup.connect(link).timeout(100000).get();
-            } catch (IOException e) {
-                System.out.println("The web " + link + " cannot be reached");
-                return;
-            }
-            synchronized (links) {
-                links.add(doc.text());
-            }
-            System.out.println(link);
-        }
-    }
 }
