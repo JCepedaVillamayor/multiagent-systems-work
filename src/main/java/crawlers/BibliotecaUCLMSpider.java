@@ -1,74 +1,103 @@
 package crawlers;
 
+import jade.core.AID;
+import jade.core.Agent;
+import jade.domain.FIPAAgentManagement.FailureException;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
+import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.domain.FIPANames;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREResponder;
+import models.Book;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.select.Elements;
-import jade.core.Agent;
-import jade.core.behaviours.*;
+import utils.Constants;
+import utils.Types;
 
 import java.io.IOException;
 import java.util.LinkedList;
 
 public class BibliotecaUCLMSpider extends Agent {
-    protected LinkedList<String> links;
-    private String query;
-    ThreadedBehaviourFactory tbf;
+    MessageTemplate senderTemplate = MessageTemplate.MatchSender(new AID("sender", AID.ISLOCALNAME));
+    MessageTemplate protocolTemplate = MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);
+    MessageTemplate template = MessageTemplate.and(senderTemplate, protocolTemplate);
 
     /**
      * Setup the agent
      */
     public void setup() {
-        this.links = new LinkedList<String>();
-        query = "risto";
-        tbf = new ThreadedBehaviourFactory();
-        addBehaviour(new SearchBehaviour(this));
+        addBehaviour(new SearchBehaviour(this, template));
     }
 
-    private class SearchBehaviour extends OneShotBehaviour {
+    private class SearchBehaviour extends AchieveREResponder {
+        private LinkedList<String> bookLinks;
+        private LinkedList<Book> books;
+
         /**
-         * Constructor of the class
+         * Class constructor
          *
-         * @param a the Agent that has invoked the class
+         * @param a
+         * @param template
          */
-        public SearchBehaviour(BibliotecaUCLMSpider a) {
-            super(a);
+        public SearchBehaviour(Agent a, MessageTemplate template) {
+            super(a, template);
+            books = new LinkedList<Book>();
+            bookLinks = new LinkedList<String>();
         }
 
         /**
-         * This function is inherited from Behaviour class
-         * Search the query
+         * This function extracts the query and search it into UCLM library.
+         *
+         * @param request
+         * @return
+         * @throws NotUnderstoodException
+         * @throws RefuseException
          */
-        public void action() {
-            search(query);
-        }
 
-        /**
-         * Search the given query.
-         *
-         * First, extracts all the links through the
-         * function
-         *
-         * @param query This is the query to search
-         * @return true if the search is successful or false if not
-         */
-        private boolean search(String query) {
+        protected ACLMessage handleRequest(ACLMessage request) throws NotUnderstoodException, RefuseException {
             Document resultPage;
 
             try {
-                resultPage = getResultPage(query);
+                resultPage = getResultPage(request.getContent());
             } catch (CannotSearchException e) {
-                return false;
+                throw new RefuseException("Cannot contact to the web");
             }
             try {
-                getBooks(resultPage);
-            } catch (NotFoundException e){
-                return false;
+                getBookLinks(resultPage);
+            } catch (NotFoundException e) {
+                throw new RefuseException("The query does not have results");
             }
 
-            return true;
+            ACLMessage agree = request.createReply();
+            agree.setPerformative(ACLMessage.AGREE);
+
+            return agree;
+        }
+
+        protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+            extractBooksFromLinks();
+            ACLMessage inform = request.createReply();
+            inform.setPerformative(ACLMessage.INFORM);
+
+            try {
+                inform.setContentObject(books);
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new FailureException("Error passing the objects to message");
+            }
+
+            return inform;
+        }
+
+        private void extractBooksFromLinks() {
+            for (String link : bookLinks) {
+                obtainBookInfo(link);
+            }
         }
 
         /**
@@ -157,34 +186,58 @@ public class BibliotecaUCLMSpider extends Agent {
             return resp;
         }
 
-
         /**
-         * Extract the book links from the web page and creates a thread
+         * Extract the book bookLinks from the web page and creates a thread
          * per link to obtain the information about the book
          *
-         * @param resultPage The web where the book links are available
+         * @param resultPage The web where the book bookLinks are available
          */
-        private void getBooks(Document resultPage) throws NotFoundException{
-            LinkedList<String> linked = new LinkedList();
+        private void getBookLinks(Document resultPage) throws NotFoundException {
+            bookLinks = new LinkedList();
             Elements noResult = resultPage.getElementsByClass("nores");
-            if (noResult.size() > 1){
-                for(Element res:noResult){
-                    System.out.printf(res.data());
-                }
+
+            if (noResult.size() > 1) {
                 throw new NotFoundException();
             }
+
             String baseUri = resultPage.baseUri().split("ACC")[0].replace("?", "");
             Elements books = resultPage.getElementsByClass("coverlist");
 
             for (Element book : books) {
                 Element bookUri = book.getElementsByTag("a").get(1);
-                String link = bookUri.attr("href");
-                linked.add(baseUri + link);
+                String link = baseUri + bookUri.attr("href");
+                bookLinks.add(link);
             }
+        }
 
-            for (String link : linked) {
-                addBehaviour(tbf.wrap(new PageBehaviour(link, getAgent())));
+        private void obtainBookInfo(String link) {
+            Document doc;
+            try {
+                doc = Jsoup.connect(link).timeout(100000).get();
+            } catch (IOException e) {
+                System.out.println("The web " + link + " cannot be reached");
+                return;
             }
+            Book book = new Book();
+            book.setAuthor(obtainAuthorFromPage(doc));
+            book.setTitle(obtainTitleFromPage(doc));
+            book.setType(Types.LIBRARY_BOOK);
+            book.setSource(Constants.BIBLIO_SOURCE);
+            book.setUrl(link);
+            book.setPrice(0.0);
+
+            books.add(book);
+
+        }
+
+        private String obtainTitleFromPage(Document doc) {
+            Element htmlTitle = doc.getElementsByClass("titn").get(1);
+            return htmlTitle.text();
+        }
+
+        public String obtainAuthorFromPage(Document doc) {
+            Element htmlTitle = doc.getElementsByClass("titn").get(0);
+            return htmlTitle.text();
         }
     }
 
