@@ -116,13 +116,16 @@ public class CasaDelLibroSpider extends Agent {
             LinkedList<Book> books = new LinkedList<Book>();
             for (Element rawBook : rawBooks) {
                 Book book = new Book();
-                book.setTitle(obtainTitleFromLink(rawBook));
-                book.setPrice(obtainPriceFromLink(rawBook));
-                book.setAuthor(obtainAuthorFromLink(rawBook));
-                book.setUrl(obtainUrlFromLink(rawBook));
-                book.setSource(Constants.CDL_SOURCE);
-                book.setType(Types.SELL_BOOK);
-                books.add(book);
+                try {
+                    book.setTitle(obtainTitleFromLink(rawBook));
+                    book.setPrice(obtainPriceFromLink(rawBook));
+                    book.setAuthor(obtainAuthorFromLink(rawBook));
+                    book.setUrl(obtainUrlFromLink(rawBook));
+                    book.setSource(Constants.CDL_SOURCE);
+                    book.setType(Types.SELL_BOOK);
+                    books.add(book);
+                } catch (Exception e) {
+                }
             }
             return books;
         }
@@ -132,12 +135,12 @@ public class CasaDelLibroSpider extends Agent {
             return Constants.CASA_DEL_LIBRO_URL + url.attr("href");
         }
 
-        private String obtainAuthorFromLink(Element link) {
+        private String obtainAuthorFromLink(Element link) throws IndexOutOfBoundsException {
             Element author = link.getElementsByClass("mod-libros-author").get(0);
             return author.text();
         }
 
-        private double obtainPriceFromLink(Element link) {
+        private double obtainPriceFromLink(Element link){
             Element price = link.getElementsByClass("currentPrice").get(0);
             String bookPrice = price.text().replaceFirst("€", "");
             return Double.parseDouble(bookPrice);

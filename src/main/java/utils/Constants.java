@@ -12,4 +12,8 @@ public class Constants {
     public static final String CASA_DEL_LIBRO_QUERY_URL = "http://www.casadellibro.com/busqueda-generica?busqueda=";
     public static final String CDL_SOURCE = "CasaDelLibro";
     public static final String BIBLIO_SOURCE = "BibliotecaUCLM";
+    public static final String AMAZON_SOURCE = "Amazon";
+    public static final String AMAZON_URL = "https://www.amazon.es";
+    public static final String AMAZON_QUERY_URL = "https://www.amazon.es/s/ref=nb_sb_noss_1?__mk_es_ES=ÅMÅŽÕÑ&url=search-alias%3Daps&field-keywords=";
+
 }

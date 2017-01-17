@@ -3,7 +3,7 @@ package models;
 import java.io.Serializable;
 
 /**
- * Created by jcepeda on 29/12/16.
+ * Cre+ated by jcepeda on 29/12/16.
  */
 public class Book implements Serializable {
     private String url, source, title, author;
@@ -62,6 +62,16 @@ public class Book implements Serializable {
         this.price = price;
     }
 
+    public int compareTo(Book other) {
+        if (price < other.getPrice()) {
+            return -1;
+        } else if (price == other.getPrice()) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
     @Override
     public String toString() {
         return "Book{" +
@@ -72,5 +82,13 @@ public class Book implements Serializable {
                 ",\nprice=" + price +
                 ",\ntype='" + type + '\'' +
                 "}\n";
+    }
+
+    public String prettyPrint() {
+        String str = "\n";
+        str += "Title: " + title + "\n";
+        str += "Author: " + author + ". Source: " + source + "\n";
+        str += "URL: " + url + "\n";
+        return str;
     }
 }

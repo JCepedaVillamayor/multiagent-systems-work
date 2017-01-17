@@ -58,7 +58,6 @@ public class BibliotecaUCLMSpider extends Agent {
          * @throws NotUnderstoodException
          * @throws RefuseException
          */
-
         protected ACLMessage handleRequest(ACLMessage request) throws NotUnderstoodException, RefuseException {
             Document resultPage;
 
@@ -79,6 +78,15 @@ public class BibliotecaUCLMSpider extends Agent {
             return agree;
         }
 
+        /**
+         * When the behaviour has agreed to the query, prepares the notification. Extracts the information from
+         * the books and replies to the request.
+         *
+         * @param request
+         * @param response
+         * @return
+         * @throws FailureException
+         */
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
             extractBooksFromLinks();
             ACLMessage inform = request.createReply();
