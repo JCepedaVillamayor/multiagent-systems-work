@@ -1,8 +1,5 @@
 package crawlers;
 
-/**
- * Created by jcepeda on 29/12/16.
- */
 public class NotFoundException extends Exception {
     public NotFoundException() {
         super();

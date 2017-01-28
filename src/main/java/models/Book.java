@@ -2,9 +2,6 @@ package models;
 
 import java.io.Serializable;
 
-/**
- * Cre+ated by jcepeda on 29/12/16.
- */
 public class Book implements Serializable {
     private String url, source, title, author;
     private double price;

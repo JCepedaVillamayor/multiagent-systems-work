@@ -25,9 +25,6 @@ import java.net.URLEncoder;
 import java.util.LinkedList;
 import java.util.Map;
 
-/**
- * Created by jcepeda on 14/01/17.
- */
 public class AmazonSpider extends Agent {
     MessageTemplate senderTemplate = MessageTemplate.MatchSender(new AID("sender", AID.ISLOCALNAME));
     MessageTemplate protocolTemplate = MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_QUERY);

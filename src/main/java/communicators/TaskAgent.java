@@ -13,9 +13,6 @@ import models.Book;
 import java.io.IOException;
 import java.util.LinkedList;
 
-/**
- * Created by jcepeda on 12/01/17.
- */
 public class TaskAgent extends Agent {
     private int receiversLeft;
     private LinkedList<Book> booksAdquired;

@@ -13,9 +13,6 @@ import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Scanner;
 
-/**
- * Created by jcepeda on 17/01/17.
- */
 public class ViewAgent extends Agent {
     LinkedList<Book> shopBooks, libraryBooks;
     Scanner scanner;

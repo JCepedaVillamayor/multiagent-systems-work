@@ -22,9 +22,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.LinkedList;
 
-/**
- * Created by jcepeda on 29/12/16.
- */
 public class CasaDelLibroSpider extends Agent {
     LinkedList<String> links;
     MessageTemplate senderTemplate = MessageTemplate.MatchSender(new AID("sender", AID.ISLOCALNAME));

@@ -15,9 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * Created by jcepeda on 17/01/17.
- */
+
 public class BookChooser extends Agent {
     MessageTemplate template = MessageTemplate.and(
             MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),
